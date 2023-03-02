@@ -49,3 +49,13 @@ Recommended: Review [MongoDB README](MONGODB.md) and[Docker Compose README](COMP
 ## Authors
 
 Michal Young, Ram Durairajan. Updated by Ali Hassani.
+
+## Author
+Catherine Raj
+
+## Description
+We are adding a submit and display button in the ACP calculator page. We are also handling error cases accordingly and 
+creating tests.
+
+## Information
+craj@uoregon.edu
