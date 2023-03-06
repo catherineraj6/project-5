@@ -65,6 +65,8 @@
                <div class="col-md-6">
                   <label>Begins at</label>
                   <input type="datetime-local" name="begin_date" id="begin_date" value="2021-01-01T00:00" />
+                  <button id = "insert">Submit</button>
+                  <button id = "fetch">Retrieve</button>
                </div>
                <!-- columns 5 to 10 -->
             </div>
@@ -114,6 +116,8 @@
          <script type="text/javascript">
             var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
             var TIME_CALC_URL = SCRIPT_ROOT + "/_calc_times";
+            var INSERT_URL = SCRIPT_ROOT + "/insert"
+            var FETCH_URL = SCRIPT_ROOT + "/fetch"
 
             // FIX ME!
             // Right now, only the kilometers are passed
