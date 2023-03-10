@@ -78,8 +78,8 @@ def insert_brevet():
                         mongo_id='None')
 
 
-@app.route("/fetch_brevet")
-def fetch_brevet():
+@app.route("/fetch")
+def get_brevet():
     """
     /fetch_brevet : fetches the newest table from the database.
     Accepts GET requests ONLY!
