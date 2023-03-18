@@ -64,9 +64,9 @@
                <!-- columns 1 to 4  -->
                <div class="col-md-6">
                   <label>Begins at</label>
-                  <input type="datetime-local" name="begin_date" id="begin_date" value="2021-01-01T00:00" />
-                  <button id = "insert">Submit</button>
-                  <button id = "fetch">Retrieve</button>
+                  <input type="datetime-local" name="begin_date" id="begin_date" value="2021-01-01 00:00" />
+                  <button id="insert">Submit</button>
+                  <button id="fetch">Display</button>
                </div>
                <!-- columns 5 to 10 -->
             </div>
@@ -116,31 +116,31 @@
          <script type="text/javascript">
             var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
             var TIME_CALC_URL = SCRIPT_ROOT + "/_calc_times";
-            var INSERT_URL = SCRIPT_ROOT + "/insert"
-            var FETCH_URL = SCRIPT_ROOT + "/fetch"
-
+            var FETCH_URL = SCRIPT_ROOT + "/fetch_brevet";
+            var INSERT_URL = SCRIPT_ROOT + "/insert";
             // FIX ME!
             // Right now, only the kilometers are passed
             // you need to pass much more!
             // View flask_brevets.py for details.
+
+
             function calc_times(control) {
               var km = control.find("input[name='km']").val();
               var open_time_field = control.find("input[name='open']");
               var close_time_field = control.find("input[name='close']");
-              var control_dist = $("#brevet_dist_km").val();
-              var start_time = $("#begin_date").val();
-
-              console.log(control_dist);
-              console.log( start_time);
+              var begin_date = $("#begin_date").val();
+              var brevet_dist_km = $("#brevet_dist_km").val();
 
 
-              $.getJSON(TIME_CALC_URL, {km: km,control_dist:control_dist,start_time:start_time}).done(
+              $.getJSON(TIME_CALC_URL, {km: km, begin_date: begin_date, brevet_dist_km: brevet_dist_km}).done(
                 function(data) {
                    var times = data.result;
                    console.log("Got a response: ");
                    console.log("Response.open = " + times.open);
+
                    // This part will automatically fill the open and close slots,
                    // so don't worry about those.
+
                    open_time_field.val(moment(times.open).format("YYYY-MM-DDTHH:mm"));
                    close_time_field.val(moment(times.close).format("YYYY-MM-DDTHH:mm"));
                  }
@@ -152,7 +152,85 @@
             }
 
             $(document).ready(function(){
-             // Do the following when the page is finished loading
+             $('#insert').click(function(event) {
+               event.preventDefault();
+               var brevet_dist_km = $('#brevet_dist_km').val();
+               var begin_date = $('#begin_date').val();
+               var items = [];
+               $('.control').each(function() {
+                  var close_time_field = $(this).find('input[name="close_time"]').val();
+                  var open_time_field = $(this).find('input[name="open_time"]').val();
+                  var km = $(this).find('input[name="km"]').val();
+                  var miles = $(this).find('input[name="miles"]').val();
+                  var location = $(this).find('input[name="location"]').val();
+                  if (km) {
+                     var item_json = {
+                     'close_time_field': close_time_field,
+                     'open_time_field': open_time_field,
+                     'km': km,
+                     'miles': miles,
+                     'location': location
+                     };
+                     items.push(item_json);
+                  }
+                  $(this).find('input').val('');
+               });
+               var brev_list = {
+                  'brevet_dist_km': brevet_dist_km,
+                  'begin_date': begin_date,
+                  'items': items
+               };
+               $.ajax({
+                  // Expect JSON responses from our backend
+                  dataType: 'json',// expected output format (getJSON sets this as well)
+                  // Specify we're sending JSON as well
+                  contentType: 'application/json',
+                  // Request method: POST
+                  type: 'POST',
+                  // URL: specified above
+                  url: INSERT_URL,
+                  // Important step that we didn't use to do in P4:
+                  // Convert our constructed dictionary to a JSON string!
+                  data: JSON.stringify(brev_list),
+                  // On a successful response from flask:
+                  success: function(data) {
+                     // Check the status code we set in Flask
+                     // Recall: 1 was success, 0 was failure
+                     if (data.status == 1) {
+                     console.log('Successfully inserted! Response: ', data);
+                     } else {
+                     console.log('Insertion failed here: ', data);
+                     }
+                  },
+                  error: function(err) {
+                     console.log('Error: ', err);
+                  }
+               });
+               });
+
+
+                $('#fetch').click(async (event) => {
+                  event.preventDefault();
+                  try {
+                     const { result: { begin_date, brevet_dist_km, items } } = await fetch(FETCH_URL).then(res => res.json());
+                     $('#begin_date').val(begin_date);
+                     $('#brevet_dist_km').val(brevet_dist_km);
+                     $('.control input').val('');
+                     items.forEach((item, index) => {
+                        if (index < $('.control').length) {
+                        const control = $('.control').eq(index);
+                        control.find("input[name='close']").val(item.close_time_field);
+                        control.find("input[name='open']").val(item.open_time_field);
+                        control.find("input[name='km']").val(item.km);
+                        control.find("input[name='miles']").val(item.miles);
+                        control.find("input[name='location']").val(item.location);
+                        }
+                     });
+                  } catch (error) {
+                     console.log('Error: ', error);
+                  }
+                  });
+
 
                 $('input[name="miles"]').change(
                    function() {
